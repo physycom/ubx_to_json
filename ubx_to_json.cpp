@@ -27,7 +27,7 @@ using namespace jsoncons;
  * ((Read_UBX)) Reads lat-lon-alt data from UBX binary file            *
  ***********************************************************************/
 
-class GPSData
+class GNSSdata
 {
 private:
   unsigned char align_A;
@@ -42,8 +42,8 @@ private:
   unsigned char ubx_navpvt_id;
   unsigned char fix;
 public:
-  GPSData();
-  void readData(std::ifstream& inputfile);
+  GNSSdata();
+  bool readData(std::FILE * );
   int32_t lon;
   int32_t lat;
   int32_t alt;
@@ -54,7 +54,7 @@ public:
 };
 
 
-GPSData::GPSData() {
+GNSSdata::GNSSdata() {
   align_A = (unsigned char)0xB5;  // mu
   align_B = (unsigned char)0x62;  // b
   ubx_navpvt_class = 0x01;
@@ -62,80 +62,90 @@ GPSData::GPSData() {
 }
 
 
-void GPSData::readData(std::ifstream& inputfile)
+bool GNSSdata::readData(std::FILE *inputfile)
 {
   unsigned char buffer;
   bool found = false;
   char * payload;
-//  std::cout << "ciao" << std::endl;
+  size_t fread_size = 0;
 
   while (!found) {
-    inputfile.read((char*)&buffer, sizeof(buffer));
-    printf("%02x ", buffer);
+  	fread_size = std::fread(&buffer, sizeof(unsigned char), 1, inputfile);
+    if (fread_size < sizeof(unsigned char)) break;
+
     if (buffer == align_A) {
-      if (inputfile.read((char*)&buffer, sizeof(buffer)).gcount() < sizeof(buffer)) break;
+  	fread_size = std::fread(&buffer, sizeof(unsigned char), 1, inputfile);
+    if (fread_size < sizeof(unsigned char)) break;
+
       if (buffer == align_B) {
-        std::cout << "Trovato messaggio " << align_A << align_B << std::endl;
-        if (inputfile.read((char*)&ubx_class, sizeof(ubx_class)).gcount() < sizeof(ubx_class)) break;
-        if (inputfile.read((char*)&ubx_id, sizeof(ubx_id)).gcount() < sizeof(ubx_id)) break;
-        if (inputfile.read((char*)&ubx_length, sizeof(ubx_length)).gcount() < sizeof(ubx_length)) break;
+        fread_size = std::fread(&ubx_class, sizeof(unsigned char), 1, inputfile);
+        if (fread_size < sizeof(unsigned char)) {printf("ops1"); break;}
+        printf("ubx_class : %02x ", ubx_class);
 
-        if (ubx_length > 0){
-          payload = new char[ubx_length];
-          if (inputfile.read(payload, ubx_length*sizeof(char)).gcount() < ubx_length*sizeof(char)) break;
+        fread_size = std::fread(&ubx_id, sizeof(unsigned char), 1, inputfile);
+        if (fread_size < sizeof(unsigned char)) {printf("ops2"); break;}
+        printf("ubx_id : %02x\r", ubx_id);
 
-          if (ubx_class == ubx_navpvt_class && ubx_id == ubx_navpvt_id){
-            unsigned char uc_temp; unsigned short us_temp;
+          if (ubx_class == ubx_navpvt_class && ubx_id == ubx_navpvt_id) {
+            fread_size = std::fread(&ubx_length, sizeof(int16_t), 1, inputfile);
+            if (fread_size < sizeof(int16_t)) {printf("ops3"); break;}
 
-            memcpy((void *)&us_temp, &payload[UBX_YEAR_OFFSET], sizeof(us_temp));
-            gps_time.tm_year = ((int)us_temp) - 1900;
-            memcpy((void *)&uc_temp, &payload[UBX_MONTH_OFFSET], sizeof(uc_temp));
-            gps_time.tm_mon = (int)uc_temp;
-            memcpy((void *)&uc_temp, &payload[UBX_DAY_OFFSET], sizeof(uc_temp));
-            gps_time.tm_mday = (int)uc_temp;
-            memcpy((void *)&uc_temp, &payload[UBX_HOUR_OFFSET], sizeof(uc_temp));
-            gps_time.tm_hour = (int)uc_temp;
-            memcpy((void *)&uc_temp, &payload[UBX_MIN_OFFSET], sizeof(uc_temp));
-            gps_time.tm_min = (int)uc_temp;
-            memcpy((void *)&uc_temp, &payload[UBX_SEC_OFFSET], sizeof(uc_temp));
-            gps_time.tm_sec = (int)uc_temp;
-            memcpy((void *)&nano, &payload[UBX_NANO_OFFSET], sizeof(nano));
-            memcpy((void *)&fix, &payload[UBX_FIX_OFFSET], sizeof(fix));
-            memcpy((void *)&lon, &payload[UBX_LON_OFFSET], sizeof(lon));
-            memcpy((void *)&lat, &payload[UBX_LAT_OFFSET], sizeof(lat));
-            memcpy((void *)&alt, &payload[UBX_ALT_OFFSET], sizeof(alt));
-            memcpy((void *)&speed, &payload[UBX_SPEED_OFFSET], sizeof(speed));
-            memcpy((void *)&heading, &payload[UBX_HEAD_OFFSET], sizeof(heading));
-          }
+            if (ubx_length > 0){
+              payload = new char[ubx_length];
+              fread_size = std::fread(payload, sizeof(char), ubx_length, inputfile);
+              if (fread_size < sizeof(char)*ubx_length) {printf("ops4"); break;}
 
-          delete[] payload;
+              unsigned char uc_temp; unsigned short us_temp;
+              memcpy((void *)&us_temp, &payload[UBX_YEAR_OFFSET], sizeof(us_temp));
+              gps_time.tm_year = ((int)us_temp) - 1900;
+              memcpy((void *)&uc_temp, &payload[UBX_MONTH_OFFSET], sizeof(uc_temp));
+              gps_time.tm_mon = (int)uc_temp;
+              memcpy((void *)&uc_temp, &payload[UBX_DAY_OFFSET], sizeof(uc_temp));
+              gps_time.tm_mday = (int)uc_temp;
+              memcpy((void *)&uc_temp, &payload[UBX_HOUR_OFFSET], sizeof(uc_temp));
+              gps_time.tm_hour = (int)uc_temp;
+              memcpy((void *)&uc_temp, &payload[UBX_MIN_OFFSET], sizeof(uc_temp));
+              gps_time.tm_min = (int)uc_temp;
+              memcpy((void *)&uc_temp, &payload[UBX_SEC_OFFSET], sizeof(uc_temp));
+              gps_time.tm_sec = (int)uc_temp;
+              memcpy((void *)&nano, &payload[UBX_NANO_OFFSET], sizeof(nano));
+              memcpy((void *)&fix, &payload[UBX_FIX_OFFSET], sizeof(fix));
+              memcpy((void *)&lon, &payload[UBX_LON_OFFSET], sizeof(lon));
+              memcpy((void *)&lat, &payload[UBX_LAT_OFFSET], sizeof(lat));
+              memcpy((void *)&alt, &payload[UBX_ALT_OFFSET], sizeof(alt));
+              memcpy((void *)&speed, &payload[UBX_SPEED_OFFSET], sizeof(speed));
+              memcpy((void *)&heading, &payload[UBX_HEAD_OFFSET], sizeof(heading));
+            }
+
+            delete[] payload;
+
+          fread_size = std::fread(&ubx_chk_A, sizeof(unsigned char), 1, inputfile);
+          if (fread_size < sizeof(unsigned char)) {printf("ops5"); break;}
+          fread_size = std::fread(&ubx_chk_B, sizeof(unsigned char), 1, inputfile);
+          if (fread_size < sizeof(unsigned char)) {printf("ops6"); break;}
+
+          found = true;
         }
-
-        if (inputfile.read((char*)&ubx_chk_A, sizeof(ubx_chk_A)).gcount() < sizeof(ubx_chk_A)) break;
-        if (inputfile.read((char*)&ubx_chk_B, sizeof(ubx_chk_B)).gcount() < sizeof(ubx_chk_B)) break;
-
-        found = true;
-        printf("%02x - %02x:%02x - %02x:%02x - Len: %hi - %02x:%02x\n", found, align_A, align_B, ubx_class, ubx_id, ubx_length, ubx_chk_A, ubx_chk_B);
       }
-//      else printf("align_B not valid: %02x:%02x\n", align_A, align_B);
     }
-//    else printf("align_A not valid : % 02x : % 02x\n", align_A, align_B);
   }
+  return found;
 }
 
 
 
 int main(int argc, char** argv)
 {
-  std::ifstream input_file;
+  std::FILE *input_file;
+
   std::ofstream output_file;
   std::stringstream ss;
   std::string record_name;
   int gps_record_counter = 0;
-  GPSData dato;
+  GNSSdata dato;
   json outjson;
 
-  std::cout << "Nmea_to_UBX v" << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
+  std::cout << "ubx_to_json v" << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
   std::cout << "Usage: " << argv[0] << " -i [input] -o [output.json]" << std::endl;
   std::cout << "\t- [input] UBX binary file to parse" << std::endl;
   std::cout << "\t- [output.json] json location to store parsed file" << std::endl;
@@ -170,46 +180,33 @@ int main(int argc, char** argv)
 
   // Safety checks for file manipulations
   std::cout << "opening : " << input_name << std::endl;
-  input_file.open(input_name.c_str() , std::ios_base::in | std::ios_base::binary);
+  input_file = fopen(input_name.c_str(), "rb");
+  if ( input_file == NULL ) {
+    std::cout << "Unable to open input file." << std::endl;
+    exit(-1);
+  }
 
-  std::cout << "is open: " << input_file.is_open() << std::endl;
-  std::cout << "eof : " << input_file.eof() << std::endl;
-  std::cout << "good : " << input_file.good() << std::endl;
-  std::cout << "fail : " << input_file.fail() << std::endl;
-  std::cout << "bad : " << input_file.bad() << std::endl;
-
-  input_file.clear( input_file.goodbit );
-
-  std::cout << "is open: " << input_file.is_open() << std::endl;
-  std::cout << "eof : " << input_file.eof() << std::endl;
-  std::cout << "good : " << input_file.good() << std::endl;
-  std::cout << "fail : " << input_file.fail() << std::endl;
-  std::cout << "bad : " << input_file.bad() << std::endl;
-
-  while (!input_file.eof()) {
-//  while (input_file.good()) {
-
-//    std::cout << "ciao2" << std::endl;
-
-    dato.readData(input_file);
+  while (dato.readData(input_file))
+  {
+  	std::cout << gps_record_counter << std::endl;
     gps_record_counter++;
     json ijson;
     ijson["lat"] = dato.lat;
     ijson["lon"] = dato.lon;
     ss << std::setfill('0') << std::setw(7) << gps_record_counter;
     record_name = "gps_record_" + ss.str();
-//    outjson[record_name] = ijson;
+    outjson[record_name] = ijson;
   }
 
-/*
   if (gps_record_counter) {
+    std::cout << "found " << gps_record_counter << " records" << std::endl;
     std::ofstream output_file;
     output_file.open(output_name.c_str());
     if (!output_file.is_open()) {
       std::cout << "FAILED: Output file " << output_name << " could not be opened." << std::endl;
       std::cout << "Press q to quit, any other key to have a fallback output on stdout." << std::endl;
       char q;
-      std::cin.get(&q,1);
+      std::cin >> q;
       if (q == 'q') exit(333);
       else std::cout << pretty_print(outjson) << std::endl;
     }
@@ -217,12 +214,9 @@ int main(int argc, char** argv)
     output_file << pretty_print(outjson) << std::endl;
     output_file.close();
   }
-  */
-
-  if( gps_record_counter ) std::cout << "record : " << gps_record_counter << std::endl;
   else std::cout << "No valid UBX data with \"ubx_navpvt_class = 0x01\" and \"ubx_navpvt_id = 0x07\" found" << std::endl;
 
-  input_file.close();
+  fclose(input_file);
 
   return 0;
 }
