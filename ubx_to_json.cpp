@@ -55,8 +55,8 @@ public:
 
 
 GPSData::GPSData() {
-  align_A = (unsigned char)0xB5;
-  align_B = (unsigned char)0x62;
+  align_A = (unsigned char)0xB5;  // mu
+  align_B = (unsigned char)0x62;  // b
   ubx_navpvt_class = 0x01;
   ubx_navpvt_id = 0x07;
 }
@@ -67,12 +67,15 @@ void GPSData::readData(std::ifstream& inputfile)
   unsigned char buffer;
   bool found = false;
   char * payload;
+//  std::cout << "ciao" << std::endl;
 
   while (!found) {
     inputfile.read((char*)&buffer, sizeof(buffer));
+    printf("%02x ", buffer);
     if (buffer == align_A) {
       if (inputfile.read((char*)&buffer, sizeof(buffer)).gcount() < sizeof(buffer)) break;
       if (buffer == align_B) {
+        std::cout << "Trovato messaggio " << align_A << align_B << std::endl;
         if (inputfile.read((char*)&ubx_class, sizeof(ubx_class)).gcount() < sizeof(ubx_class)) break;
         if (inputfile.read((char*)&ubx_id, sizeof(ubx_id)).gcount() < sizeof(ubx_id)) break;
         if (inputfile.read((char*)&ubx_length, sizeof(ubx_length)).gcount() < sizeof(ubx_length)) break;
@@ -114,9 +117,9 @@ void GPSData::readData(std::ifstream& inputfile)
         found = true;
         printf("%02x - %02x:%02x - %02x:%02x - Len: %hi - %02x:%02x\n", found, align_A, align_B, ubx_class, ubx_id, ubx_length, ubx_chk_A, ubx_chk_B);
       }
-      else printf("align_B not valid: %02x:%02x\n", align_A, align_B);
+//      else printf("align_B not valid: %02x:%02x\n", align_A, align_B);
     }
-    else printf("align_A not valid : % 02x : % 02x\n", align_A, align_B);
+//    else printf("align_A not valid : % 02x : % 02x\n", align_A, align_B);
   }
 }
 
@@ -166,9 +169,28 @@ int main(int argc, char** argv)
   }
 
   // Safety checks for file manipulations
-  input_file.open(input_name.c_str());
+  std::cout << "opening : " << input_name << std::endl;
+  input_file.open(input_name.c_str() , std::ios_base::in | std::ios_base::binary);
+
+  std::cout << "is open: " << input_file.is_open() << std::endl;
+  std::cout << "eof : " << input_file.eof() << std::endl;
+  std::cout << "good : " << input_file.good() << std::endl;
+  std::cout << "fail : " << input_file.fail() << std::endl;
+  std::cout << "bad : " << input_file.bad() << std::endl;
+
+  input_file.clear( input_file.goodbit );
+
+  std::cout << "is open: " << input_file.is_open() << std::endl;
+  std::cout << "eof : " << input_file.eof() << std::endl;
+  std::cout << "good : " << input_file.good() << std::endl;
+  std::cout << "fail : " << input_file.fail() << std::endl;
+  std::cout << "bad : " << input_file.bad() << std::endl;
 
   while (!input_file.eof()) {
+//  while (input_file.good()) {
+
+//    std::cout << "ciao2" << std::endl;
+
     dato.readData(input_file);
     gps_record_counter++;
     json ijson;
@@ -176,10 +198,10 @@ int main(int argc, char** argv)
     ijson["lon"] = dato.lon;
     ss << std::setfill('0') << std::setw(7) << gps_record_counter;
     record_name = "gps_record_" + ss.str();
-    outjson[record_name] = ijson;
+//    outjson[record_name] = ijson;
   }
 
-
+/*
   if (gps_record_counter) {
     std::ofstream output_file;
     output_file.open(output_name.c_str());
@@ -195,6 +217,9 @@ int main(int argc, char** argv)
     output_file << pretty_print(outjson) << std::endl;
     output_file.close();
   }
+  */
+
+  if( gps_record_counter ) std::cout << "record : " << gps_record_counter << std::endl;
   else std::cout << "No valid UBX data with \"ubx_navpvt_class = 0x01\" and \"ubx_navpvt_id = 0x07\" found" << std::endl;
 
   input_file.close();
