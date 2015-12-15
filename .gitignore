@@ -5,6 +5,9 @@
 *.obj
 *.suo
 *.u2d
+*.opendb
+*.sdf
+[Dd]ebug/
 
 # Precompiled Headers
 *.gch

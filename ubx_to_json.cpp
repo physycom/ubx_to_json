@@ -1,10 +1,12 @@
+
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <ctime>
 #include "jsoncons/json.hpp"
 
-using namespace jsoncons;
 
 #define MAJOR_VERSION          0
 #define MINOR_VERSION          1
@@ -143,7 +145,7 @@ int main(int argc, char** argv)
   std::string record_name;
   int gps_record_counter = 0;
   GNSSdata dato;
-  json outjson;
+  jsoncons::json outjson;
 
   std::cout << "ubx_to_json v" << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
   std::cout << "Usage: " << argv[0] << " -i [input] -o [output.json]" << std::endl;
@@ -190,7 +192,7 @@ int main(int argc, char** argv)
   {
   	std::cout << gps_record_counter << std::endl;
     gps_record_counter++;
-    json ijson;
+    jsoncons::json ijson;
     ijson["lat"] = dato.lat;
     ijson["lon"] = dato.lon;
     ss << std::setfill('0') << std::setw(7) << gps_record_counter;
@@ -208,10 +210,10 @@ int main(int argc, char** argv)
       char q;
       std::cin >> q;
       if (q == 'q') exit(333);
-      else std::cout << pretty_print(outjson) << std::endl;
+      else std::cout << jsoncons::pretty_print(outjson) << std::endl;
     }
     else std::cout << "SUCCESS: file " << output_name << " opened!" << std::endl;
-    output_file << pretty_print(outjson) << std::endl;
+    output_file << jsoncons::pretty_print(outjson) << std::endl;
     output_file.close();
   }
   else std::cout << "No valid UBX data with \"ubx_navpvt_class = 0x01\" and \"ubx_navpvt_id = 0x07\" found" << std::endl;
