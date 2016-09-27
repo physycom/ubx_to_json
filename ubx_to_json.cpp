@@ -9,7 +9,7 @@
 
 
 #define MAJOR_VERSION          0
-#define MINOR_VERSION          1
+#define MINOR_VERSION          2
 
 #define UBX_YEAR_OFFSET    4
 #define UBX_MONTH_OFFSET   6
@@ -117,9 +117,9 @@ bool GNSSdata::readData(std::FILE *inputfile)
               memcpy((void *)&alt, &payload[UBX_ALT_OFFSET], sizeof(alt));
               memcpy((void *)&speed, &payload[UBX_SPEED_OFFSET], sizeof(speed));
               memcpy((void *)&heading, &payload[UBX_HEAD_OFFSET], sizeof(heading));
+              delete[] payload;
             }
 
-            delete[] payload;
 
           fread_size = std::fread(&ubx_chk_A, sizeof(unsigned char), 1, inputfile);
           if (fread_size < sizeof(unsigned char)) {printf("ops5"); break;}

@@ -37,4 +37,7 @@
 *.kml
 
 # Folders
-data/
+/data
+/obj
+/bin
+*.db
