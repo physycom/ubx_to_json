@@ -7,9 +7,10 @@
 #include <ctime>
 #include "jsoncons/json.hpp"
 
+#define my_printf(...);
 
 #define MAJOR_VERSION          0
-#define MINOR_VERSION          2
+#define MINOR_VERSION          3
 
 #define UBX_YEAR_OFFSET    4
 #define UBX_MONTH_OFFSET   6
@@ -81,21 +82,21 @@ bool GNSSdata::readData(std::FILE *inputfile)
 
       if (buffer == align_B) {
         fread_size = std::fread(&ubx_class, sizeof(unsigned char), 1, inputfile);
-        if (fread_size < sizeof(unsigned char)) {printf("ops1"); break;}
-        printf("ubx_class : %02x ", ubx_class);
+        if (fread_size < sizeof(unsigned char)) {my_printf("ops1\n"); break;}
+        my_printf("ubx_class : %02x\n", ubx_class);
 
         fread_size = std::fread(&ubx_id, sizeof(unsigned char), 1, inputfile);
-        if (fread_size < sizeof(unsigned char)) {printf("ops2"); break;}
-        printf("ubx_id : %02x\r", ubx_id);
+        if (fread_size < sizeof(unsigned char)) {my_printf("ops2\n"); break;}
+        my_printf("ubx_id : %02x\n", ubx_id);
 
           if (ubx_class == ubx_navpvt_class && ubx_id == ubx_navpvt_id) {
             fread_size = std::fread(&ubx_length, sizeof(int16_t), 1, inputfile);
-            if (fread_size < sizeof(int16_t)) {printf("ops3"); break;}
+            if (fread_size < sizeof(int16_t)) {my_printf("ops3\n"); break;}
 
             if (ubx_length > 0){
               payload = new char[ubx_length];
               fread_size = std::fread(payload, sizeof(char), ubx_length, inputfile);
-              if (fread_size < sizeof(char)*ubx_length) {printf("ops4"); break;}
+              if (fread_size < sizeof(char)*ubx_length) {my_printf("ops4\n"); break;}
 
               unsigned char uc_temp; unsigned short us_temp;
               memcpy((void *)&us_temp, &payload[UBX_YEAR_OFFSET], sizeof(us_temp));
@@ -122,9 +123,9 @@ bool GNSSdata::readData(std::FILE *inputfile)
 
 
           fread_size = std::fread(&ubx_chk_A, sizeof(unsigned char), 1, inputfile);
-          if (fread_size < sizeof(unsigned char)) {printf("ops5"); break;}
+          if (fread_size < sizeof(unsigned char)) {my_printf("ops5\n"); break;}
           fread_size = std::fread(&ubx_chk_B, sizeof(unsigned char), 1, inputfile);
-          if (fread_size < sizeof(unsigned char)) {printf("ops6"); break;}
+          if (fread_size < sizeof(unsigned char)) {my_printf("ops6\n"); break;}
 
           found = true;
         }
