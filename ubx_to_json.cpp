@@ -10,7 +10,7 @@
 #define my_printf(...);
 
 #define MAJOR_VERSION          0
-#define MINOR_VERSION          3
+#define MINOR_VERSION          4
 
 #define UBX_YEAR_OFFSET    4
 #define UBX_MONTH_OFFSET   6
@@ -136,9 +136,16 @@ bool GNSSdata::readData(std::FILE *inputfile)
 }
 
 
+void usage(char* progname) {
+  std::cout << "Usage: " << progname << " -i [input] -o [output.json]" << std::endl;
+  std::cout << "\t- [input] UBX binary file to parse" << std::endl;
+  std::cout << "\t- [output.json] json location to store parsed file" << std::endl;
+}
+
 
 int main(int argc, char** argv)
 {
+  std::cout << "ubx_to_json v" << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
   std::FILE *input_file;
 
   std::ofstream output_file;
@@ -147,11 +154,6 @@ int main(int argc, char** argv)
   int gps_record_counter = 0;
   GNSSdata dato;
   jsoncons::json outjson;
-
-  std::cout << "ubx_to_json v" << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
-  std::cout << "Usage: " << argv[0] << " -i [input] -o [output.json]" << std::endl;
-  std::cout << "\t- [input] UBX binary file to parse" << std::endl;
-  std::cout << "\t- [output.json] json location to store parsed file" << std::endl;
 
   // Parsing command line
   std::string input_name, output_name;
@@ -167,17 +169,19 @@ int main(int argc, char** argv)
           break;
         default:    // no match...
           std::cout << "Flag \"" << argv[i] << "\" not recognized. Quitting..." << std::endl;
+          usage(argv[0]);
           exit(1);
         }
       }
       else {
         std::cout << "Flag \"" << argv[i] << "\" not recognized. Quitting..." << std::endl;
+        usage(argv[0]);
         exit(11);
       }
     }
   }
   else {
-    std::cout << "No flags specified. Read usage and relaunch properly." << std::endl;
+    usage(argv[0]);
     exit(111);
   }
 
