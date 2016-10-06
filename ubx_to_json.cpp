@@ -7,10 +7,10 @@
 #include <ctime>
 #include "jsoncons/json.hpp"
 
-#define my_printf(...);
+#define my_printf(...)
 
 #define MAJOR_VERSION          0
-#define MINOR_VERSION          4
+#define MINOR_VERSION          5
 
 #define UBX_YEAR_OFFSET    4
 #define UBX_MONTH_OFFSET   6
@@ -137,9 +137,9 @@ bool GNSSdata::readData(std::FILE *inputfile)
 
 
 void usage(char* progname) {
-  std::cout << "Usage: " << progname << " -i [input] -o [output.json]" << std::endl;
-  std::cout << "\t- [input] UBX binary file to parse" << std::endl;
-  std::cout << "\t- [output.json] json location to store parsed file" << std::endl;
+  std::cerr << "Usage: " << progname << " -i [input] -o [output.json]" << std::endl;
+  std::cerr << "\t- [input] UBX binary file to parse" << std::endl;
+  std::cerr << "\t- [output.json] json location to store parsed file" << std::endl;
 }
 
 
@@ -168,13 +168,13 @@ int main(int argc, char** argv)
           output_name = argv[++i];
           break;
         default:    // no match...
-          std::cout << "Flag \"" << argv[i] << "\" not recognized. Quitting..." << std::endl;
+          std::cerr << "Flag \"" << argv[i] << "\" not recognized. Quitting..." << std::endl;
           usage(argv[0]);
           exit(1);
         }
       }
       else {
-        std::cout << "Flag \"" << argv[i] << "\" not recognized. Quitting..." << std::endl;
+        std::cerr << "Flag \"" << argv[i] << "\" not recognized. Quitting..." << std::endl;
         usage(argv[0]);
         exit(11);
       }
@@ -189,13 +189,12 @@ int main(int argc, char** argv)
   std::cout << "opening : " << input_name << std::endl;
   input_file = fopen(input_name.c_str(), "rb");
   if ( input_file == NULL ) {
-    std::cout << "Unable to open input file." << std::endl;
+    std::cerr << "Unable to open input file " << input_file << std::endl;
     exit(-1);
   }
 
   while (dato.readData(input_file))
   {
-  	std::cout << gps_record_counter << std::endl;
     gps_record_counter++;
     jsoncons::json ijson;
     ijson["lat"] = dato.lat;
@@ -210,18 +209,15 @@ int main(int argc, char** argv)
     std::ofstream output_file;
     output_file.open(output_name.c_str());
     if (!output_file.is_open()) {
-      std::cout << "FAILED: Output file " << output_name << " could not be opened." << std::endl;
-      std::cout << "Press q to quit, any other key to have a fallback output on stdout." << std::endl;
-      char q;
-      std::cin >> q;
-      if (q == 'q') exit(333);
-      else std::cout << jsoncons::pretty_print(outjson) << std::endl;
+      std::cerr << "FAILED: Output file " << output_name << " could not be opened." << std::endl;
+      std::cerr << "Output redirected to stdout." << std::endl;
+      std::cout << jsoncons::pretty_print(outjson) << std::endl;
     }
     else std::cout << "SUCCESS: file " << output_name << " opened!" << std::endl;
     output_file << jsoncons::pretty_print(outjson) << std::endl;
     output_file.close();
   }
-  else std::cout << "No valid UBX data with \"ubx_navpvt_class = 0x01\" and \"ubx_navpvt_id = 0x07\" found" << std::endl;
+  else std::cout << "No valid UBX data with \"ubx_navpvt = (0x01, 0x07)\" (class, id) found" << std::endl;
 
   fclose(input_file);
 
