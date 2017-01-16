@@ -1,6 +1,7 @@
 EXE = ubx_to_json.exe
 
-all:
-	$(CXX) -std=c++11 -o $(EXE) -I. ubx_to_json.cpp
+all: dirtree
+	$(CXX) -std=c++11 -o bin/$(EXE) -Isrc/jsoncons/src src/ubx_to_json.cpp
 
- 
+dirtree:
+	@mkdir -p bin

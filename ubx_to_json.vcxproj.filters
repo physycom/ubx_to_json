@@ -15,11 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ubx_to_json.cpp">
-      <Filter>File di origine</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="jsoncons\json.hpp">
       <Filter>File di intestazione</Filter>
     </ClInclude>
@@ -77,5 +72,10 @@
     <ClInclude Include="jsoncons\json_text_error_category.hpp">
       <Filter>File di intestazione</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\ubx_to_json.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
