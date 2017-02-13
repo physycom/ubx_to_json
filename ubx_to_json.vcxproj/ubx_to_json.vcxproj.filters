@@ -74,7 +74,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ubx_to_json.cpp">
+    <ClCompile Include="..\src\ubx_to_json.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
   </ItemGroup>
