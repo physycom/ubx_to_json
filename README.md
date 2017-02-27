@@ -34,5 +34,5 @@ ubx_to_json.exe -i input.ubx -o output.json
 ```
 where `input.ubx` must be an existing and valid .ubx file, while `output.json` is the name of the output file.
 
-More details can be found in our technical description of the file formats (document still not published)
+More details about file formats is available [here](https://github.com/physycom/file_format_specifications/blob/master/formati_file.md).
 
